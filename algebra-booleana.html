@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Álgebra Booleana — Bases de Datos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080c14;
+    --bg2:       #0d1220;
+    --bg3:       #111827;
+    --surface:   #151d2e;
+    --surface2:  #1a2438;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.12);
+    --text:      #e2e8f4;
+    --muted:     #64748b;
+    --accent:    #38bdf8;
+    --accent2:   #0ea5e9;
+    --green:     #4ade80;
+    --green-bg:  rgba(74,222,128,0.08);
+    --green-bd:  rgba(74,222,128,0.25);
+    --red:       #f87171;
+    --red-bg:    rgba(248,113,113,0.08);
+    --red-bd:    rgba(248,113,113,0.2);
+    --yellow:    #facc15;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Space Grotesk', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ──────── HEADER ──────── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8,12,20,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:.6; transform:scale(.85); }
+  }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.01em;
+  }
+
+  .header-sub {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .header-badge {
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.2);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* ──────── LAYOUT ──────── */
+  .page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  .intro {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+  }
+
+  .intro-text {
+    flex: 1;
+    min-width: 260px;
+  }
+
+  .intro-text h1 {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .intro-text h1 span { color: var(--accent); }
+
+  .intro-text p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 540px;
+  }
+
+  .bool-legend {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .legend-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    text-align: center;
+    min-width: 90px;
+  }
+
+  .legend-val {
+    font-size: 2rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .legend-val.v1 { color: var(--green); text-shadow: 0 0 20px rgba(74,222,128,.4); }
+  .legend-val.v0 { color: var(--red);   text-shadow: 0 0 20px rgba(248,113,113,.4); }
+
+  .legend-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+  /* ──────── MAIN GRID ──────── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ──────── PANELS ──────── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .panel-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .panel-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+  }
+
+  .rec-badge {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ──────── TABLE ──────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .2s;
+    position: relative;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody tr.active {
+    background: rgba(74,222,128,0.06);
+    box-shadow: inset 3px 0 0 var(--green);
+  }
+
+  tbody td {
+    padding: 9px 14px;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .td-name { font-weight: 500; }
+  .td-carrera { color: var(--muted); font-size: 12px; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .chip-1 { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+  .chip-0 { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-bd); }
+
+  /* ──────── PROP BUTTONS ──────── */
+  .prop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .prop-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    transition: background .15s, border-color .15s, transform .1s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .prop-btn:hover { background: var(--surface2); border-color: var(--border2); }
+  .prop-btn:active { transform: scale(.98); }
+
+  .prop-btn.active {
+    background: rgba(56,189,248,0.08);
+    border-color: rgba(56,189,248,0.35);
+    color: var(--accent);
+  }
+
+  .prop-btn .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: background .15s;
+  }
+
+  .prop-btn.active .icon { background: rgba(56,189,248,0.15); }
+
+  .prop-btn-name { font-weight: 500; }
+  .prop-btn-formula {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .prop-btn.active .prop-btn-formula { color: rgba(56,189,248,0.7); }
+
+  /* ──────── RIGHT COLUMN ──────── */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ──────── DETAIL PANEL ──────── */
+  .detail {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .detail-head {
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -.01em;
+    margin-bottom: 4px;
+  }
+
+  .detail-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .detail-body {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .sec-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    margin-bottom: 8px;
+  }
+
+  /* ──────── SQL BLOCK ──────── */
+  .sql-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text);
+    line-height: 1.8;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  .kw  { color: #7dd3fc; }
+  .val { color: #86efac; }
+  .op  { color: #f9a8d4; }
+
+  /* ──────── FORMULA ──────── */
+  .formula-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: .02em;
+  }
+
+  .formula-note {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ──────── BOOL CASES ──────── */
+  .bool-cases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .bool-case {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .bool-case.true-case { border-color: var(--green-bd); color: var(--green); background: var(--green-bg); }
+  .bool-case.false-case { border-color: var(--red-bd); color: var(--red); background: var(--red-bg); }
+
+  /* ──────── EVAL ROWS ──────── */
+  .eval-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--bg3);
+    margin-bottom: 6px;
+    transition: background .2s;
+  }
+
+  .eval-row:last-child { margin-bottom: 0; }
+  .eval-row.match { background: rgba(74,222,128,0.06); border-left: 2px solid var(--green); padding-left: 8px; }
+
+  .eval-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .eval-chips { display: flex; gap: 5px; }
+
+  /* ──────── RESULT FOOTER ──────── */
+  .result-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 0;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+
+  .result-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+  .result-count { font-size: 13px; font-weight: 600; }
+  .result-count.ok { color: var(--green); }
+  .result-count.zero { color: var(--red); }
+
+  /* ──────── STAT PILLS ──────── */
+  .stat-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+    min-width: 70px;
+  }
+
+  .stat-val { font-size: 18px; font-weight: 600; color: var(--accent); font-family: var(--mono); }
+  .stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; text-align: center; }
+
+  /* ──────── FOOTER ──────── */
+  footer {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  /* ──────── SCROLLBAR ──────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="header-dot"></div>
+    <div>
+      <div class="header-title">Simulador Álgebra Booleana</div>
+      <div class="header-sub">Bases de Datos — Exposición</div>
+    </div>
+  </div>
+  <span class="header-badge">Interactivo</span>
+</header>
+
+<div class="page">
+
+  <div class="intro">
+    <div class="intro-text">
+      <h1>Álgebra <span>Booleana</span><br>en Bases de Datos</h1>
+      <p>
+        Selecciona una propiedad y observa cómo la lógica booleana actúa sobre los registros de la base de datos.
+        Cada condición se evalúa como <strong style="color:var(--green)">1 (verdadero)</strong> o <strong style="color:var(--red)">0 (falso)</strong>,
+        y el resultado final determina si el registro aparece en la consulta.
+      </p>
+    </div>
+    <div class="bool-legend">
+      <div class="legend-card">
+        <div class="legend-val v1">1</div>
+        <div class="legend-label">Verdadero</div>
+      </div>
+      <div class="legend-card">
+        <div class="legend-val v0">0</div>
+        <div class="legend-label">Falso</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-row" style="margin-bottom:24px;">
+    <div class="stat-pill"><div class="stat-val">8</div><div class="stat-lbl">Registros</div></div>
+    <div class="stat-pill"><div class="stat-val" id="stat-sw">5</div><div class="stat-lbl">Software</div></div>
+    <div class="stat-pill"><div class="stat-val" id="stat-mat">6</div><div class="stat-lbl">Matriculados</div></div>
+    <div class="stat-pill"><div class="stat-val" id="stat-match" style="color:var(--green)">4</div><div class="stat-lbl">Coinciden</div></div>
+    <div class="stat-pill"><div class="stat-val" id="stat-prop" style="color:var(--accent);font-size:12px;">Asociativa</div><div class="stat-lbl">Propiedad</div></div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- LEFT: tabla + botones -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Tabla -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-label">Base de datos — Estudiantes</span>
+          <span class="rec-badge">8 registros</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Carrera</th>
+              <th>Prom.</th>
+              <th>Mat.</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Propiedades -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-label">Propiedades booleanas</span>
+        </div>
+        <div class="prop-list" id="prop-list"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: detalle -->
+    <div class="right-col">
+      <div class="detail" id="detail"></div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Exposición — Álgebra Booleana y Bases de Datos &nbsp;·&nbsp; Lógica Digital aplicada a SQL
+</footer>
+
+<script>
+/* ── DATA ── */
+const STUDENTS = [
+  { id:'ana',       n:'Ana López',      c:'Software',    p:8.75, m:1 },
+  { id:'maria',     n:'María Gómez',    c:'Software',    p:9.10, m:1 },
+  { id:'pedro',     n:'Pedro Ramírez',  c:'Software',    p:7.80, m:0 },
+  { id:'laura',     n:'Laura Sánchez',  c:'Electrónica', p:8.90, m:1 },
+  { id:'carlos',    n:'Carlos Pérez',   c:'Diseño',      p:6.50, m:1 },
+  { id:'sofia',     n:'Sofía Herrera',  c:'Software',    p:9.50, m:1 },
+  { id:'jose',      n:'José Molina',    c:'Mecánica',    p:7.10, m:0 },
+  { id:'valentina', n:'Valentina Ruiz', c:'Software',    p:8.20, m:1 },
+];
+
+const PROPS = [
+  {
+    key: 'asociativa',
+    name: 'Ley asociativa',
+    icon: '⊕',
+    formula: '(a ∧ b) ∧ c = a ∧ (b ∧ c)',
+    short: '(a∧b)∧c',
+    desc: 'Las condiciones pueden agruparse en distinto orden sin cambiar el resultado final.',
+    note: 'Si una condición vale 0, el resultado final siempre será 0.',
+    sql: `<span class="kw">SELECT</span> * <span class="kw">FROM</span> estudiantes
+<span class="kw">WHERE</span>  carrera     = <span class="val">'Software'</span>
+  <span class="kw">AND</span>  promedio    > <span class="val">8</span>
+  <span class="kw">AND</span>  matriculado = <span class="val">1</span>;`,
+    cases: [
+      { t:'1 ∧ 1 ∧ 1 = 1', ok:true  },
+      { t:'1 ∧ 0 ∧ 0 = 0', ok:false },
+      { t:'(1∧1)∧1 = 1∧(1∧1)', ok:true },
+    ],
+    active: ['ana','maria','sofia','valentina'],
+    eval: [
+      { n:'Ana López',     sw:1, pr:1, mt:1 },
+      { n:'María Gómez',   sw:1, pr:1, mt:1 },
+      { n:'Pedro Ramírez', sw:1, pr:0, mt:0 },
+      { n:'Sofía Herrera', sw:1, pr:1, mt:1 },
+    ],
+    cols: ['Software','Prom>8','Mat'],
+  },
+  {
+    key: 'conmutativa',
+    name: 'Ley conmutativa',
+    icon: '⇄',
+    formula: 'a ∧ b = b ∧ a',
+    short: 'a∧b = b∧a',
+    desc: 'El orden de las condiciones en un AND u OR no altera el resultado.',
+    note: 'Ambas consultas devuelven exactamente los mismos registros.',
+    sql: `<span class="op">-- Forma 1</span>
+<span class="kw">WHERE</span> carrera = <span class="val">'Software'</span> <span class="kw">AND</span> promedio > <span class="val">8</span>
+
+<span class="op">-- Forma 2 (equivalente)</span>
+<span class="kw">WHERE</span> promedio > <span class="val">8</span> <span class="kw">AND</span> carrera = <span class="val">'Software'</span>`,
+    cases: [
+      { t:'1 ∧ 1 = 1', ok:true  },
+      { t:'1 ∧ 0 = 0 ∧ 1', ok:true },
+      { t:'0 ∧ 1 = 0', ok:false },
+    ],
+    active: ['ana','maria','sofia'],
+    eval: [
+      { n:'Ana López',     sw:1, pr:1, mt:null },
+      { n:'María Gómez',   sw:1, pr:1, mt:null },
+      { n:'Pedro Ramírez', sw:1, pr:0, mt:null },
+      { n:'Sofía Herrera', sw:1, pr:1, mt:null },
+    ],
+    cols: ['Software','Prom>8',null],
+  },
+  {
+    key: 'distributiva',
+    name: 'Ley distributiva',
+    icon: '∪',
+    formula: 'a ∧ (b ∨ c)',
+    short: 'a∧(b∨c)',
+    desc: 'Un AND puede distribuirse sobre un OR para simplificar consultas complejas.',
+    note: 'Con OR basta que una condición del paréntesis sea verdadera.',
+    sql: `<span class="kw">SELECT</span> * <span class="kw">FROM</span> estudiantes
+<span class="kw">WHERE</span>  carrera = <span class="val">'Software'</span>
+  <span class="kw">AND</span> (promedio > <span class="val">8</span> <span class="kw">OR</span> matriculado = <span class="val">1</span>);`,
+    cases: [
+      { t:'1 ∧ (1 ∨ 0) = 1', ok:true  },
+      { t:'1 ∧ (0 ∨ 1) = 1', ok:true  },
+      { t:'1 ∧ (0 ∨ 0) = 0', ok:false },
+    ],
+    active: ['ana','maria','pedro','sofia','valentina'],
+    eval: [
+      { n:'Ana López',      sw:1, pr:1, mt:1 },
+      { n:'María Gómez',    sw:1, pr:1, mt:1 },
+      { n:'Pedro Ramírez',  sw:1, pr:0, mt:0 },
+      { n:'Sofía Herrera',  sw:1, pr:1, mt:1 },
+      { n:'Valentina Ruiz', sw:1, pr:1, mt:1 },
+    ],
+    cols: ['Software','Prom>8','Mat'],
+  },
+  {
+    key: 'identidad',
+    name: 'Ley de identidad',
+    icon: '=',
+    formula: 'a ∧ 1 = a',
+    short: 'a∧1 = a',
+    desc: 'Agregar una condición siempre verdadera (1=1) no cambia el resultado.',
+    note: 'El valor 1 es el elemento neutro del AND; el 0 lo es del OR.',
+    sql: `<span class="kw">SELECT</span> * <span class="kw">FROM</span> estudiantes
+<span class="kw">WHERE</span>  carrera = <span class="val">'Software'</span>
+  <span class="kw">AND</span>  <span class="val">1</span> = <span class="val">1</span>;  <span class="op">-- condición identidad</span>`,
+    cases: [
+      { t:'1 ∧ 1 = 1', ok:true  },
+      { t:'0 ∧ 1 = 0', ok:false },
+      { t:'a ∧ 1 = a', ok:true  },
+    ],
+    active: ['ana','maria','pedro','sofia','valentina'],
+    eval: [
+      { n:'Ana López',      sw:1, pr:null, mt:null },
+      { n:'María Gómez',    sw:1, pr:null, mt:null },
+      { n:'Sofía Herrera',  sw:1, pr:null, mt:null },
+      { n:'Valentina Ruiz', sw:1, pr:null, mt:null },
+    ],
+    cols: ['Software',null,null],
+  },
+  {
+    key: 'complemento',
+    name: 'Ley de complemento',
+    icon: '¬',
+    formula: 'a ∧ ā = 0',
+    short: 'a∧ā = 0',
+    desc: 'Una condición y su negación no pueden ser verdaderas al mismo tiempo.',
+    note: 'Ningún registro puede cumplir condiciones contradictorias simultáneamente.',
+    sql: `<span class="kw">SELECT</span> * <span class="kw">FROM</span> estudiantes
+<span class="kw">WHERE</span>  matriculado = <span class="val">1</span>
+  <span class="kw">AND</span>  matriculado = <span class="val">0</span>; <span class="op">-- imposible</span>`,
+    cases: [
+      { t:'1 ∧ 0 = 0', ok:false },
+      { t:'0 ∧ 1 = 0', ok:false },
+      { t:'siempre → 0', ok:false },
+    ],
+    active: [],
+    eval: [
+      { n:'Pedro Ramírez', sw:null, pr:null, mt:0 },
+      { n:'José Molina',   sw:null, pr:null, mt:0 },
+    ],
+    cols: [null,null,'Mat=1∧0'],
+  },
+];
+
+/* ── BUILD TABLE ── */
+function buildTable() {
+  const tb = document.getElementById('tbody');
+  tb.innerHTML = '';
+  STUDENTS.forEach((s,i) => {
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + s.id;
+    tr.innerHTML = `
+      <td style="color:var(--muted);font-family:var(--mono);font-size:11px;">${i+1}</td>
+      <td class="td-name">${s.n}</td>
+      <td class="td-carrera">${s.c}</td>
+      <td style="font-family:var(--mono);font-size:12px;">${s.p.toFixed(2)}</td>
+      <td><span class="chip chip-${s.m}">${s.m}</span></td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+/* ── BUILD PROP BUTTONS ── */
+function buildProps() {
+  const list = document.getElementById('prop-list');
+  list.innerHTML = '';
+  PROPS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'prop-btn';
+    btn.dataset.key = p.key;
+    btn.onclick = () => selectProp(p.key);
+    btn.innerHTML = `
+      <span class="icon">${p.icon}</span>
+      <span class="prop-btn-name">${p.name}</span>
+      <span class="prop-btn-formula">${p.short}</span>
+    `;
+    list.appendChild(btn);
+  });
+}
+
+/* ── CHIP HTML ── */
+function chip(v, label) {
+  if (v === null) return `<span style="color:var(--muted);font-size:10px;padding:0 4px;">—</span>`;
+  return `<span class="chip chip-${v ? 1 : 0}" title="${label || ''}">${v ? '1' : '0'}</span>`;
+}
+
+/* ── SELECT PROP ── */
+function selectProp(key) {
+  const p = PROPS.find(x => x.key === key);
+  if (!p) return;
+
+  // Update buttons
+  document.querySelectorAll('.prop-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.key === key);
+  });
+
+  // Update table highlights
+  document.querySelectorAll('#tbody tr').forEach(tr => tr.classList.remove('active'));
+  p.active.forEach(id => {
+    const row = document.getElementById('row-' + id);
+    if (row) row.classList.add('active');
+  });
+
+  // Update stats
+  document.getElementById('stat-match').textContent = p.active.length;
+  document.getElementById('stat-prop').textContent = p.name.replace('Ley de ','').replace('Ley ','');
+
+  // Eval rows
+  const evalHtml = p.eval.map(r => {
+    const isMatch = p.active.some(id => STUDENTS.find(s => s.id === id)?.n === r.n);
+    return `<div class="eval-row ${isMatch ? 'match' : ''}">
+      <span class="eval-name">${r.n}</span>
+      <span class="eval-chips">
+        ${p.cols[0] !== null ? chip(r.sw,  p.cols[0]) : ''}
+        ${p.cols[1] !== null ? chip(r.pr,  p.cols[1]) : ''}
+        ${p.cols[2] !== null ? chip(r.mt,  p.cols[2]) : ''}
+      </span>
+    </div>`;
+  }).join('');
+
+  const colLabels = p.cols.filter(Boolean);
+  const colRow = colLabels.length > 0
+    ? `<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:6px;">
+        ${colLabels.map(c => `<span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;min-width:32px;text-align:center;">${c}</span>`).join('')}
+       </div>`
+    : '';
+
+  const countOk = p.active.length;
+  const resultHtml = key === 'complemento'
+    ? `<span class="result-count zero">Sin resultados — condición imposible</span>`
+    : `<span class="result-count ok">${countOk} registro${countOk !== 1 ? 's' : ''} encontrado${countOk !== 1 ? 's' : ''}</span>`;
+
+  document.getElementById('detail').innerHTML = `
+    <div class="detail-head">
+      <div class="detail-title">${p.name}</div>
+      <div class="detail-desc">${p.desc}</div>
+    </div>
+    <div class="detail-body">
+
+      <div>
+        <div class="sec-label">Consulta SQL</div>
+        <div class="sql-block">${p.sql}</div>
+      </div>
+
+      <div>
+        <div class="sec-label">Propiedad booleana</div>
+        <div class="formula-box">
+          <div class="formula">${p.formula}</div>
+          <div class="formula-note">${p.note}</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sec-label">Evaluación binaria</div>
+        <div class="bool-cases">
+          ${p.cases.map(c => `<div class="bool-case ${c.ok ? 'true-case' : 'false-case'}">${c.t}</div>`).join('')}
+        </div>
+      </div>
+
+      <div>
+        <div class="sec-label">Resultado por registro</div>
+        ${colRow}
+        ${evalHtml}
+      </div>
+
+      <div class="result-footer">
+        <span class="result-label">Resultado de la consulta</span>
+        ${resultHtml}
+      </div>
+
+    </div>
+  `;
+}
+
+/* ── INIT ── */
+buildTable();
+buildProps();
+selectProp('asociativa');
+</script>
+</body>
+</html>
